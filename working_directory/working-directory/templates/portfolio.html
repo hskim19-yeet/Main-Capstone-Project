@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+  <h1 class="mb-4">Portfolio for {{ user.username }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+  <h2>Cash Account</h2>
+  {% if acct %}
+  <p><strong>Current Balance:</strong> ${{ '%.2f'|format(acct.current_balance) }}</p>
+  <form class="row g-2" onsubmit="adjustCash(event)">
+    <div class="col-auto">
+      <input id="cashAmount" type="number" step="0.01" class="form-control" placeholder="Amount" required>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-success" onclick="action='deposit'">Deposit</button>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-warning" onclick="action='withdraw'">Withdraw</button>
+    </div>
+  </form>
+  {% else %}
+  <p>No account yet. Deposit to create one.</p>
+  {% endif %}
+  <hr class="my-4">
+  <h2>Stock Positions</h2>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Portfolio ID</th>
+        <th>Stock ID</th>
+        <th>Quantity</th>
+        <th>Updated At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in positions %}
+      <tr>
+        <td>{{ p.portfolio_id }}</td>
+        <td>{{ p.stock_id }}</td>
+        <td>{{ p.quantity }}</td>
+        <td>{{ p.updated_at }}</td>
+        <td>
+          <a href="/delete_position/{{ p.portfolio_id }}" class="btn btn-sm btn-danger">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h2>Add Position</h2>
+  <form onsubmit="addPosition(event)">
+    <div class="mb-3">
+      <label for="stockId" class="form-label">Stock ID</label>
+      <input type="number" class="form-control" id="stockId" required>
+    </div>
+    <div class="mb-3">
+      <label for="quantity" class="form-label">Quantity</label>
+      <input type="number" class="form-control" id="quantity" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Position</button>
+  </form>
+</div>
+<script>
+  let action = '';
+  function adjustCash(event) {
+    event.preventDefault();
+    const amt = document.getElementById('cashAmount').value;
+    if (action === 'deposit') {
+      window.location.href = `/add_cash/{{ user.user_id }}/${amt}`;
+    } else {
+      window.location.href = `/withdraw_cash/{{ user.user_id }}/${amt}`;
+    }
+  }
+  function addPosition(event) {
+    event.preventDefault();
+    const stockId = document.getElementById('stockId').value;
+    const qty = document.getElementById('quantity').value;
+    window.location.href = `/add_position/{{ user.user_id }}/${stockId}/${qty}`;
+  }
+</script>
+
+{% endblock %}
